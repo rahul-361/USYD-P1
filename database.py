@@ -9,34 +9,51 @@ import psycopg2
 Connect to the database using the connection string
 '''
 def openConnection():
-    # connection parameters - ENTER YOUR LOGIN AND PASSWORD HERE
-    userid = "y24s2c9120_unikey"
-    passwd = ""
+    userid = "y24s2c9120_aphi0710"
+    passwd = "GqsCu2gz"
     myHost = "awsprddbs4836.shared.sydney.edu.au"
 
-
     # Create a connection to the database
-    conn = None
+    c = None
+    # Parses the config file and connects using the connect string
     try:
-        # Parses the config file and connects using the connect string
-        conn = psycopg2.connect(database=userid,
-                                    user=userid,
-                                    password=passwd,
-                                    host=myHost)
-
+        c = psycopg2.connect(
+            database=userid, user=userid,
+            password=passwd, host=myHost
+        )
     except psycopg2.Error as sqle:
         print("psycopg2.Error : " + sqle.pgerror)
-    
-    # return the connection to use
-    return conn
+    return c
 
-'''
-Validate staff based on username and password
-'''
+# Validate staff based on username and password
 def checkLogin(login, password):
-
-    return ['jdoe', 'John', 'Doe', 'jdoe@csh.com']
-
+    c = openConnection()
+    if(not c): return None
+    try:
+        with c.cursor() as x:
+            x.execute(
+                """
+                    SELECT 
+                        USERNAME, FIRSTNAME, LASTNAME, EMAIL
+                    FROM 
+                        ADMINISTRATOR
+                    WHERE 
+                        USERNAME = %s 
+                    AND 
+                        PASSWORD = %s
+                """, (login, password)
+            )
+            user = x.fetchone()
+            if(user): print(f"Login successful for user: {user}")
+            else: print("Login failed. No matching user found.")
+            return user
+    
+    except psycopg2.Error as e: 
+        print(f"Error querying database: {e}")
+    finally:
+        if(c): c.close()
+    
+    return None
 
 '''
 List all the associated admissions records in the database by staff
