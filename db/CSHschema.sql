@@ -3,7 +3,7 @@ DROP TABLE IF EXISTS PATIENT;
 DROP TABLE IF EXISTS ADMISSIONTYPE;
 DROP TABLE IF EXISTS DEPARTMENT;
 DROP TABLE IF EXISTS ADMISSION;
-
+SET datestyle ='DMY';
 CREATE TABLE ADMINISTRATOR (
     USERNAME VARCHAR(10) PRIMARY KEY,
     PASSWORD VARCHAR(20) NOT NULL,
@@ -90,3 +90,40 @@ INSERT INTO ADMISSION (ADMISSIONTYPE, DEPARTMENT, FEE, PATIENT, ADMINISTRATOR, D
     (4, 1, 75.00, 'gthomas', 'bbrown', '19/11/2023', 'Routine general practitioner consultation for a follow-up after a recent bout of seasonal allergies.'),
     (3, 3, 7000.50, 'smartinez', 'jdoe', '15/10/2024', NULL),
     (1, 2, NULL, 'etylor', 'jdoe', NULL, 'I am having intense, crushing pain in my chest that feels like an elephant is sitting on it. It is spreading to my left arm and neck.');
+
+CREATE OR REPLACE FUNCTION admit_view(p_login VARCHAR)
+RETURNS TABLE (
+    ID INTEGER,
+    Type VARCHAR(20),
+    Department VARCHAR(20),
+    "Discharge Date" DATE,
+    Fee DECIMAL(7,2),
+    Patient VARCHAR(101),
+    Condition VARCHAR(500)
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        A.AdmissionID AS "ID",  
+        C.ADMISSIONTYPENAME AS "Type",
+        D.DEPTNAME AS "Department", 
+        A.DISCHARGEDATE AS "Discharge Date",
+        A.FEE AS "Fee", 
+        CONCAT(B.FIRSTNAME, ' ', B.LASTNAME)::VARCHAR(101) AS "Patient",
+        A.CONDITION AS "Condition"
+    FROM ADMISSION AS A
+    INNER JOIN PATIENT AS B
+        ON A.PATIENT = B.PATIENTID
+    INNER JOIN ADMISSIONTYPE AS C
+        ON A.ADMISSIONTYPE = C.ADMISSIONTYPEID
+    INNER JOIN DEPARTMENT AS D
+        ON A.DEPARTMENT = D.DEPTID
+    WHERE A.ADMINISTRATOR = p_login
+    ORDER BY A.DISCHARGEDATE DESC NULLS LAST, 
+             B.FIRSTNAME ASC, 
+             B.LASTNAME ASC,
+             C.ADMISSIONTYPENAME DESC;
+END;
+$$;
