@@ -178,13 +178,10 @@ def update_admission():
     if (discharge_date == ''):
         discharge_date = None
 
-    success = database.updateAdmission(request.form['admission_id'],
-                                        request.form['type'],
-                                        request.form['department'],
-                                        discharge_date,
-                                        request.form['fee'],
-                                        request.form['patient'],
-                                        request.form['condition'])
+    success = database.updateAdmission(
+        request.form['admission_id'], request.form['type'], request.form['department'],
+        discharge_date, request.form['fee'], request.form['patient'], request.form['condition']
+    )
     if (success == True):
         page['bar'] = True
         flash("Admission record updated!")

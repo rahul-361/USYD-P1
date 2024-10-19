@@ -43,6 +43,7 @@ def checkLogin(login, password):
             )
             user = x.fetchone()
             output = "Success" if(user) else "Fail"
+            print(output)
             return user
     
     except psycopg2.Error as e:
@@ -61,12 +62,12 @@ def findAdmissionsByAdmin(login):
             x.execute(
                 """
                     SELECT 
-                        A.ADMISSIONID AS "ID", C.ADMISSIONTYPENAME AS "Type",
-                        D.DEPTNAME AS "Department", 
-                        A.DISCHARGEDATE AS "Discharge Date",
-                        A.FEE AS "Fee", 
-                        CONCAT(B.FIRSTNAME, ' ', B.LASTNAME) AS "Patient",
-                        A.CONDITION AS "Condition"
+                        A.ADMISSIONID AS "admission_id", C.ADMISSIONTYPENAME AS "type",
+                        D.DEPTNAME AS "department", 
+                        A.DISCHARGEDATE AS "discharge_date",
+                        A.FEE AS "fee", 
+                        CONCAT(B.FIRSTNAME, ' ', B.LASTNAME) AS "patient",
+                        A.CONDITION AS "condition"
                     FROM ADMISSION AS A
 
                     INNER JOIN PATIENT AS B
