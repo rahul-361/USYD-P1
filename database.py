@@ -9,8 +9,8 @@ import psycopg2
 Connect to the database using the connection string
 '''
 def openConnection():
-    userid = "y24s2c9120_aphi0710"
-    passwd = "GqsCu2gz"
+    userid = "y24s2c9120_shaz0913"
+    passwd = "Saifali@2001"
     myHost = "awsprddbs4836.shared.sydney.edu.au"
 
     # Create a connection to the database
@@ -21,8 +21,8 @@ def openConnection():
             database=userid, user=userid,
             password=passwd, host=myHost
         )
-    except psycopg2.Error as sqle:
-        print("psycopg2.Error : " + sqle.pgerror)
+    except psycopg2.Error as e:
+        print("psycopg2.Error :", e.pgerror)
     return c
 
 # Validate staff based on username and password
@@ -32,36 +32,72 @@ def checkLogin(login, password):
     try:
         with c.cursor() as x:
             x.execute(
+                f"""
+                    SELECT FIRSTNAME, LASTNAME
+                    FROM ADMINISTRATOR
+                    WHERE USERNAME = {login}
+                    AND PASSWORD = {password}
                 """
-                    SELECT 
-                        USERNAME, FIRSTNAME, LASTNAME, EMAIL
-                    FROM 
-                        ADMINISTRATOR
-                    WHERE 
-                        USERNAME = %s 
-                    AND 
-                        PASSWORD = %s
-                """, (login, password)
             )
             user = x.fetchone()
-            if(user): print(f"Login successful for user: {user}")
-            else: print("Login failed. No matching user found.")
+            output = "Success" if(user) else "Fail"
             return user
     
-    except psycopg2.Error as e: 
-        print(f"Error querying database: {e}")
+    except psycopg2.Error as e:
+        print("psycopg2.Error :", e.pgerror)
     finally:
         if(c): c.close()
     
-    return None
-
-'''
-List all the associated admissions records in the database by staff
-'''
-def findAdmissionsByAdmin(login):
-
     return
 
+# List all the associated admissions records in the database by staff
+def findAdmissionsByAdmin(login):
+    c = openConnection()
+    if(not c): return None
+    try:
+        with c.cursor() as x:
+            x.execute(
+                f"""
+                    SELECT 
+                        A.ID AS ID, 
+                        C.ADMISSIONTYPENAME AS Type,
+                        D.DEPTNAME AS Department, 
+                        A.DISCHARGEDATE AS "Discharge Date",
+                        A.FEE as Fee,
+                        CONCAT(B.FIRSTNAME, " ", B.LASTNAME) AS Patient,
+                        A.CONDITION
+                    
+                    FROM (
+                        SELECT ROW_NUMBER() AS ID, *
+                        FROM ADMISSION 
+                    ) AS A
+
+                    INNER JOIN PATIENT AS B
+                    ON A.PATIENT = B.PATIENTID
+
+                    INNER JOIN ADMISSIONTYPE AS C
+                    ON A.ADMISSIONTYPE = C.ADMISSIONTYPEID
+
+                    INNER JOIN DEPARTMENT AS D
+                    ON A.DEPARTMENT = D.DEPTID
+
+                    WHERE A.ADMINISTRATOR = {login}
+
+                    ORDER BY A.DISCHARGEDATE DESC, 
+                    B.FIRSTNAME ASC, B.LASTNAME ASC,
+                    C.ADMISSIONTYPENAME DESC
+                """
+            )
+            user = x.fetchall()
+            output = "Success" if(user) else "Fail"
+            return user
+    
+    except psycopg2.Error as e:
+        print("psycopg2.Error :", e.pgerror)
+    finally:
+        if(c): c.close()
+    
+    return
 
 '''
 Find a list of admissions based on the searchString provided as parameter
