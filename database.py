@@ -32,12 +32,14 @@ def checkLogin(login, password):
     try:
         with c.cursor() as x:
             x.execute(
-                f"""
-                    SELECT FIRSTNAME, LASTNAME
-                    FROM ADMINISTRATOR
-                    WHERE USERNAME = {login}
-                    AND PASSWORD = {password}
                 """
+                    SELECT 
+                        USERNAME, FIRSTNAME, 
+                        LASTNAME, EMAIL
+                    FROM ADMINISTRATOR
+                    WHERE USERNAME = %s
+                    AND PASSWORD = %s
+                """, (login, password)
             )
             user = x.fetchone()
             output = "Success" if(user) else "Fail"
@@ -57,7 +59,7 @@ def findAdmissionsByAdmin(login):
     try:
         with c.cursor() as x:
             x.execute(
-                f"""
+                """
                     SELECT 
                         A.ID AS ID, 
                         C.ADMISSIONTYPENAME AS Type,
@@ -81,12 +83,12 @@ def findAdmissionsByAdmin(login):
                     INNER JOIN DEPARTMENT AS D
                     ON A.DEPARTMENT = D.DEPTID
 
-                    WHERE A.ADMINISTRATOR = {login}
+                    WHERE A.ADMINISTRATOR = %s
 
                     ORDER BY A.DISCHARGEDATE DESC, 
                     B.FIRSTNAME ASC, B.LASTNAME ASC,
                     C.ADMISSIONTYPENAME DESC
-                """
+                """, (login)
             )
             user = x.fetchall()
             output = "Success" if(user) else "Fail"
