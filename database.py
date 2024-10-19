@@ -61,17 +61,13 @@ def findAdmissionsByAdmin(login):
             x.execute(
                 """
                     SELECT 
-                    A.ID AS "ID", C.ADMISSIONTYPENAME AS "Type",
-                    D.DEPTNAME AS "Department", 
-                    A.DISCHARGEDATE AS "Discharge Date",
-                    A.FEE AS "Fee", 
-                    CONCAT(B.FIRSTNAME, ' ', B.LASTNAME) AS "Patient",
-                    A.CONDITION AS "Condition"
-
-                    FROM (
-                        SELECT ROW_NUMBER() OVER () AS ID, *
-                        FROM ADMISSION
-                    ) AS A
+                        A.ADMISSIONID AS "ID", C.ADMISSIONTYPENAME AS "Type",
+                        D.DEPTNAME AS "Department", 
+                        A.DISCHARGEDATE AS "Discharge Date",
+                        A.FEE AS "Fee", 
+                        CONCAT(B.FIRSTNAME, ' ', B.LASTNAME) AS "Patient",
+                        A.CONDITION AS "Condition"
+                    FROM ADMISSION AS A
 
                     INNER JOIN PATIENT AS B
                     ON A.PATIENT = B.PATIENTID
@@ -87,9 +83,9 @@ def findAdmissionsByAdmin(login):
                     ORDER BY A.DISCHARGEDATE DESC NULLS LAST, 
                     B.FIRSTNAME ASC, B.LASTNAME ASC,
                     C.ADMISSIONTYPENAME DESC;
-                """, (login)
+                """, (login,)
             )
-            info = x.fetchone()
+            info = x.fetchall()
             output = "Success" if(info) else "Fail"
             return info
     
