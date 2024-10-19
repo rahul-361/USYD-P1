@@ -61,17 +61,16 @@ def findAdmissionsByAdmin(login):
             x.execute(
                 """
                     SELECT 
-                        A.ID AS ID, 
-                        C.ADMISSIONTYPENAME AS Type,
-                        D.DEPTNAME AS Department, 
-                        A.DISCHARGEDATE AS "Discharge Date",
-                        A.FEE as Fee,
-                        CONCAT(B.FIRSTNAME, " ", B.LASTNAME) AS Patient,
-                        A.CONDITION
-                    
+                    A.ID AS "ID", C.ADMISSIONTYPENAME AS "Type",
+                    D.DEPTNAME AS "Department", 
+                    A.DISCHARGEDATE AS "Discharge Date",
+                    A.FEE AS "Fee", 
+                    CONCAT(B.FIRSTNAME, ' ', B.LASTNAME) AS "Patient",
+                    A.CONDITION AS "Condition"
+
                     FROM (
-                        SELECT ROW_NUMBER() AS ID, *
-                        FROM ADMISSION 
+                        SELECT ROW_NUMBER() OVER () AS ID, *
+                        FROM ADMISSION
                     ) AS A
 
                     INNER JOIN PATIENT AS B
@@ -85,14 +84,14 @@ def findAdmissionsByAdmin(login):
 
                     WHERE A.ADMINISTRATOR = %s
 
-                    ORDER BY A.DISCHARGEDATE DESC, 
+                    ORDER BY A.DISCHARGEDATE DESC NULLS LAST, 
                     B.FIRSTNAME ASC, B.LASTNAME ASC,
-                    C.ADMISSIONTYPENAME DESC
+                    C.ADMISSIONTYPENAME DESC;
                 """, (login)
             )
-            user = x.fetchall()
-            output = "Success" if(user) else "Fail"
-            return user
+            info = x.fetchone()
+            output = "Success" if(info) else "Fail"
+            return info
     
     except psycopg2.Error as e:
         print("psycopg2.Error :", e.pgerror)
